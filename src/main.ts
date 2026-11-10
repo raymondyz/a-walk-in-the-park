@@ -2,7 +2,7 @@ import './style.css';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -31,10 +31,29 @@ window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-let last = performance.now();
-renderer.setAnimationLoop((time) => {
-  const dt = (time - last) / 1000;
-  last = time;
-  
+renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
 });
+
+
+
+function takeScreenshot() {
+    // Render the scene to make sure it's up to date
+    renderer.render(scene, camera);
+
+    const dataURL = renderer.domElement.toDataURL('image/png');
+
+    // Create a download link
+    const link = document.createElement('a');
+    link.download = 'threejs-screenshot.png';
+    link.href = dataURL;
+    link.click();
+}
+
+function handleScreenshotKey(event: KeyboardEvent) {
+    if (event.key === 'p') {
+        takeScreenshot();
+    }
+}
+
+window.addEventListener('keydown', handleScreenshotKey);
