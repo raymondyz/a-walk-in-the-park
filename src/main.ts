@@ -12,6 +12,8 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const loader = new GLTFLoader();
 scene.background = new THREE.Color(0x87ceeb);
+const movementVelocity = new THREE.Vector3();
+
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 1.6, 5);
@@ -50,6 +52,8 @@ window.addEventListener('resize', () => {
 });
 
 renderer.setAnimationLoop(() => {
+  controls.moveRight(movementVelocity.x);
+  controls.moveForward(movementVelocity.z);
   renderer.render(scene, camera);
 });
 
@@ -75,20 +79,29 @@ function handleInput(event: KeyboardEvent) {
 
     if(event.key === 'w')
       {
-        controls.moveForward(moveDist);
+        movementVelocity.z = moveDist;
       }
     if(event.key === 's')
       {
-        controls.moveForward(-moveDist);
+        movementVelocity.z = -moveDist;
       }
     if(event.key === 'a')
       {
-        controls.moveRight(-moveDist);
+        movementVelocity.x = -moveDist;
       }
     if(event.key === 'd')
       {
-        controls.moveRight(moveDist);
+        movementVelocity.x = moveDist;
       }
 }
+
+window.addEventListener('keyup', (event) => {
+    if (event.key === 'w' || event.key === 's') {
+        movementVelocity.z = 0;
+    }
+    if (event.key === 'a' || event.key === 'd') {
+        movementVelocity.x = 0;
+    }
+});
 
 window.addEventListener('keydown', handleInput);
