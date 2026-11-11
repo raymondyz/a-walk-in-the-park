@@ -14,8 +14,12 @@ const loader = new GLTFLoader();
 scene.background = new THREE.Color(0x87ceeb);
 const movementVelocity = new THREE.Vector3();
 
+//camera controls and values
+const photoGallery = [];
+const defaultFOV = 70;
+const zoomedFOV = 30;
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(defaultFOV, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 1.6, 5);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
@@ -65,18 +69,16 @@ function takeScreenshot() {
 
     const dataURL = renderer.domElement.toDataURL('image/png');
 
+    photoGallery.push(dataURL);
+
     // Create a download link
-    const link = document.createElement('a');
-    link.download = 'threejs-screenshot.png';
-    link.href = dataURL;
-    link.click();
+    // const link = document.createElement('a');
+    // link.download = 'threejs-screenshot.png';
+    // link.href = dataURL;
+    // link.click();
 }
 
 function handleInput(event: KeyboardEvent) {
-    if (event.key === 'p') {
-        takeScreenshot();
-    }
-
     if(event.key === 'w')
       {
         movementVelocity.z = moveDist;
@@ -104,4 +106,35 @@ window.addEventListener('keyup', (event) => {
     }
 });
 
+function handleCameraShoot(event: MouseEvent) {
+    if (event.button === 0) {
+        takeScreenshot();
+    }
+}
+
+function handleCameraZoom(event: MouseEvent) {
+    if (event.button === 2) {
+        camera.fov = zoomedFOV;
+        camera.updateProjectionMatrix();
+    }
+}
+
+function handleCameraUnzoom(event: MouseEvent) {
+    if (event.button === 2) {
+        camera.fov = defaultFOV;
+        camera.updateProjectionMatrix();
+    }
+}
+
 window.addEventListener('keydown', handleInput);
+window.addEventListener('click', handleCameraShoot);
+window.addEventListener('mousedown', handleCameraZoom);
+window.addEventListener('mouseup', handleCameraUnzoom);
+window.addEventListener('mouseleave', () => {
+    camera.fov = defaultFOV;
+    camera.updateProjectionMatrix();
+});
+
+window.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+});
