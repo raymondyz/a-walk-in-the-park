@@ -27,7 +27,7 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-const moveDist = 0.3;
+const moveDist = 0.03;
 
 function createTree(x: number, z: number): void {
 
