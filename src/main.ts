@@ -1,6 +1,8 @@
 import './style.css';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -8,6 +10,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
+const loader = new GLTFLoader();
 scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -21,6 +24,21 @@ const ground = new THREE.Mesh(
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
+
+const moveDist = 0.3;
+
+function createTree(x: number, z: number): void {
+
+  loader.load(treeModelUrl, (gltf) => {
+    const tree = gltf.scene;
+    tree.position.set(x, 0, z);
+    scene.add(tree);
+  }, undefined, (error) => {
+    console.error('Unable to load pine_tree.glb', error);
+  });
+}
+
+createTree(10, 10);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 renderer.domElement.addEventListener('click', () => controls.lock());
@@ -50,10 +68,27 @@ function takeScreenshot() {
     link.click();
 }
 
-function handleScreenshotKey(event: KeyboardEvent) {
+function handleInput(event: KeyboardEvent) {
     if (event.key === 'p') {
         takeScreenshot();
     }
+
+    if(event.key === 'w')
+      {
+        controls.moveForward(moveDist);
+      }
+    if(event.key === 's')
+      {
+        controls.moveForward(-moveDist);
+      }
+    if(event.key === 'a')
+      {
+        controls.moveRight(-moveDist);
+      }
+    if(event.key === 'd')
+      {
+        controls.moveRight(moveDist);
+      }
 }
 
-window.addEventListener('keydown', handleScreenshotKey);
+window.addEventListener('keydown', handleInput);
