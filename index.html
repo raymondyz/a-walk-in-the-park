@@ -7,7 +7,10 @@
     <title>a-walk-in-the-park</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+        <div id="app" class="relative h-screen w-screen overflow-hidden">
+          <div id="three-root" class="absolute inset-0 z-0"></div>
+          <div id="react-root" class="absolute inset-0 pointer-events-none z-10"></div>
+        </div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
