@@ -4,7 +4,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
 import { createRoot } from 'react-dom/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import PhotosPanel from '../components/PhotosPanel';
 
 const app = document.getElementById('react-root');
@@ -21,6 +21,12 @@ const root = createRoot(reactMount);
 
 function App() {
 	const [photosShown, setPhotosShown] = useState(false);
+    const photosShownRef = useRef(photosShown);
+
+    // Keep photosShownRef in sync with photosShown
+    useEffect(() => {
+        photosShownRef.current = photosShown;
+    }, [photosShown])
 
 	useEffect(() => {
 		function handlePanelKey(event: KeyboardEvent) {
@@ -30,6 +36,17 @@ function App() {
 		}
 
 		window.addEventListener('keydown', handlePanelKey);
+        window.addEventListener('keydown', handleInput);
+        window.addEventListener('click', (event) => {!photosShownRef.current && handleCameraShoot(event)});
+        window.addEventListener('mousedown', handleCameraZoom);
+        window.addEventListener('mouseup', handleCameraUnzoom);
+        window.addEventListener('mouseleave', () => {
+            camera.fov = defaultFOV;
+            camera.updateProjectionMatrix();
+        });
+        window.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
 		return () => window.removeEventListener('keydown', handlePanelKey);
 	}, []);
 
@@ -157,16 +174,3 @@ function handleCameraUnzoom(event: MouseEvent) {
         camera.updateProjectionMatrix();
     }
 }
-
-window.addEventListener('keydown', handleInput);
-window.addEventListener('click', handleCameraShoot);
-window.addEventListener('mousedown', handleCameraZoom);
-window.addEventListener('mouseup', handleCameraUnzoom);
-window.addEventListener('mouseleave', () => {
-    camera.fov = defaultFOV;
-    camera.updateProjectionMatrix();
-});
-
-window.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-});
