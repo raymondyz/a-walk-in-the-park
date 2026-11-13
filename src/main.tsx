@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState, useRef } from 'react';
 import PhotosPanel from '../components/PhotosPanel';
+import CameraFlash from '../components/CameraFlash';
 
 //model imports
 import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
@@ -26,6 +27,7 @@ const root = createRoot(reactMount);
 function App() {
 	const [photosShown, setPhotosShown] = useState(false);
     const photosShownRef = useRef(photosShown);
+    const [flashCount, setFlashCount] = useState(0);
 
     // Keep photosShownRef in sync with photosShown
     useEffect(() => {
@@ -41,7 +43,11 @@ function App() {
 
 		window.addEventListener('keydown', handlePanelKey);
         window.addEventListener('keydown', handleInput);
-        window.addEventListener('click', (event) => {!photosShownRef.current && handleCameraShoot(event)});
+        window.addEventListener('click', (event) => {
+            if (photosShownRef.current) return;
+            handleCameraShoot(event);
+            setFlashCount((prev) => prev + 1);
+        });
         window.addEventListener('mousedown', handleCameraZoom);
         window.addEventListener('mouseup', handleCameraUnzoom);
         window.addEventListener('mouseleave', () => {
@@ -54,7 +60,12 @@ function App() {
 		return () => window.removeEventListener('keydown', handlePanelKey);
 	}, []);
 
-	return <PhotosPanel isOpen={photosShown} photosList={photoGallery}/>;
+	return (
+    <>
+        <CameraFlash trigger={flashCount} />
+        <PhotosPanel isOpen={photosShown} photosList={photoGallery}/>;
+    </>
+    )
 }
 
 root.render(<App />);
