@@ -4,7 +4,7 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
 import { createRoot } from 'react-dom/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import PhotosPanel from '../components/PhotosPanel';
 
 const app = document.getElementById('react-root');
@@ -21,6 +21,12 @@ const root = createRoot(reactMount);
 
 function App() {
 	const [photosShown, setPhotosShown] = useState(false);
+    const photosShownRef = useRef(photosShown);
+
+    // Keep photosShownRef in sync with photosShown
+    useEffect(() => {
+        photosShownRef.current = photosShown;
+    }, [photosShown])
 
 	useEffect(() => {
 		function handlePanelKey(event: KeyboardEvent) {
@@ -30,6 +36,17 @@ function App() {
 		}
 
 		window.addEventListener('keydown', handlePanelKey);
+        window.addEventListener('keydown', handleInput);
+        window.addEventListener('click', (event) => {!photosShownRef.current && handleCameraShoot(event)});
+        window.addEventListener('mousedown', handleCameraZoom);
+        window.addEventListener('mouseup', handleCameraUnzoom);
+        window.addEventListener('mouseleave', () => {
+            camera.fov = defaultFOV;
+            camera.updateProjectionMatrix();
+        });
+        window.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
 		return () => window.removeEventListener('keydown', handlePanelKey);
 	}, []);
 
@@ -54,20 +71,31 @@ const movementVelocity = new THREE.Vector3();
 const photoGallery: any[] = [];
 const defaultFOV = 70;
 const zoomedFOV = 30;
+const cameraHeight = 1.6
 
 const camera = new THREE.PerspectiveCamera(defaultFOV, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1.6, 5);
+camera.position.set(0, cameraHeight, 5);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
 
+/* ===== Terrain ===== */
+
+function terrainHeight(x: number, z: number): number {
+    return Math.sin(0.2*x) + Math.cos(0.5*z);
+}
+
+const groundGeometry = new THREE.PlaneGeometry(100, 100, 256, 256)
+groundGeometry.rotateX(-Math.PI / 2)
 const ground = new THREE.Mesh(
-	new THREE.PlaneGeometry(100, 100),
+	groundGeometry,
 	new THREE.MeshStandardMaterial({ color: 0x556b2f })
 );
-ground.rotation.x = -Math.PI / 2;
+const groundPositions = groundGeometry.attributes.position;
+for (let i = 0; i < groundPositions.count; i++) {
+    groundPositions.setY(i, terrainHeight(groundPositions.getX(i), groundPositions.getZ(i)));
+}
+groundGeometry.computeVertexNormals();
 scene.add(ground);
-
-const moveDist = 0.03;
 
 function createTree(x: number, z: number): void {
 
@@ -91,9 +119,12 @@ window.addEventListener('resize', () => {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+/* ===== Animation Loop ===== */
+
 renderer.setAnimationLoop(() => {
 	controls.moveRight(movementVelocity.x);
 	controls.moveForward(movementVelocity.z);
+    camera.position.y = terrainHeight(camera.position.x, camera.position.z) + cameraHeight
 	renderer.render(scene, camera);
 });
 
@@ -114,18 +145,20 @@ function takeScreenshot() {
     // link.click();
 }
 
+const moveSpeed = 0.03;
+
 function handleInput(event: KeyboardEvent) {
     if (event.key === 'w') {
-        movementVelocity.z = moveDist;
+        movementVelocity.z = moveSpeed;
     }
     if (event.key === 's') {
-        movementVelocity.z = -moveDist;
+        movementVelocity.z = -moveSpeed;
     }
     if (event.key === 'a') {
-        movementVelocity.x = -moveDist;
+        movementVelocity.x = -moveSpeed;
     }
     if (event.key === 'd') {
-        movementVelocity.x = moveDist;
+        movementVelocity.x = moveSpeed;
     }
 }
 
@@ -157,16 +190,3 @@ function handleCameraUnzoom(event: MouseEvent) {
         camera.updateProjectionMatrix();
     }
 }
-
-window.addEventListener('keydown', handleInput);
-window.addEventListener('click', handleCameraShoot);
-window.addEventListener('mousedown', handleCameraZoom);
-window.addEventListener('mouseup', handleCameraUnzoom);
-window.addEventListener('mouseleave', () => {
-    camera.fov = defaultFOV;
-    camera.updateProjectionMatrix();
-});
-
-window.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-});
