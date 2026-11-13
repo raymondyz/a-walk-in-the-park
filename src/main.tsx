@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { useEffect, useState, useRef } from 'react';
 import PhotosPanel from '../components/PhotosPanel';
 import CameraFlash from '../components/CameraFlash';
+import CameraOverlay from '../components/CameraOverlay';
 
 //model imports
 import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
@@ -62,8 +63,9 @@ function App() {
 
 	return (
     <>
+        <CameraOverlay />
         <CameraFlash trigger={flashCount} />
-        <PhotosPanel isOpen={photosShown} photosList={photoGallery}/>;
+        <PhotosPanel isOpen={photosShown} photosList={photoGallery}/>
     </>
     )
 }
