@@ -2,10 +2,14 @@ import './style.css';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState, useRef } from 'react';
 import PhotosPanel from '../components/PhotosPanel';
+
+//model imports
+import treeModelUrl from '../3d_models_glb_files/pine_tree.glb?url';
+import benchModelUrl from '../3d_models_glb_files/bench.glb?url';
+import duckModelUrl from '../3d_models_glb_files/duck.glb?url';
 
 const app = document.getElementById('react-root');
 if (!app) throw new Error('Missing app');
@@ -97,18 +101,55 @@ for (let i = 0; i < groundPositions.count; i++) {
 groundGeometry.computeVertexNormals();
 scene.add(ground);
 
+//CREATE OBJECTS
+
 function createTree(x: number, z: number): void {
 
 	loader.load(treeModelUrl, (gltf) => {
 		const tree = gltf.scene;
-		tree.position.set(x, 0, z);
+		tree.position.set(x, terrainHeight(x,z), z);
 		scene.add(tree);
 	}, undefined, (error) => {
 		console.error('Unable to load pine_tree.glb', error);
 	});
 }
 
-createTree(10, 10);
+function createBench(x: number, z: number): void {
+
+	loader.load(benchModelUrl, (gltf) => {
+		const bench = gltf.scene;
+		bench.position.set(x, terrainHeight(x,z)+.6, z);
+        bench.rotateY(Math.PI);
+		scene.add(bench);
+	}, undefined, (error) => {
+		console.error('Unable to load bench.glb', error);
+	});
+}
+
+function createDuck(x: number, z: number): void {
+
+	loader.load(duckModelUrl, (gltf) => {
+		const duck = gltf.scene;
+		duck.position.set(x, terrainHeight(x,z)+.1, z);
+        duck.scale.set(0.2, 0.2, 0.2);
+		scene.add(duck);
+	}, undefined, (error) => {
+		console.error('Unable to load duck.glb', error);
+	});
+}
+
+for(let i = 0; i < 5; i++)
+{
+    for(let j = 0; j < 5; j++)
+    {
+        createTree(i * 10 + Math.random() * 2 - 1, j * 10 + Math.random() * 2 - 1);
+    }
+}
+
+createBench(10.5,12);
+createDuck(0,0);
+createDuck(3,3);
+createDuck(8,6);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 renderer.domElement.addEventListener('click', () => controls.lock());
