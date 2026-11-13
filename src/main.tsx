@@ -71,20 +71,31 @@ const movementVelocity = new THREE.Vector3();
 const photoGallery: any[] = [];
 const defaultFOV = 70;
 const zoomedFOV = 30;
+const cameraHeight = 1.6
 
 const camera = new THREE.PerspectiveCamera(defaultFOV, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1.6, 5);
+camera.position.set(0, cameraHeight, 5);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
 
+/* ===== Terrain ===== */
+
+function terrainHeight(x: number, z: number): number {
+    return Math.sin(0.2*x) + Math.cos(0.5*z);
+}
+
+const groundGeometry = new THREE.PlaneGeometry(100, 100, 256, 256)
+groundGeometry.rotateX(-Math.PI / 2)
 const ground = new THREE.Mesh(
-	new THREE.PlaneGeometry(100, 100),
+	groundGeometry,
 	new THREE.MeshStandardMaterial({ color: 0x556b2f })
 );
-ground.rotation.x = -Math.PI / 2;
+const groundPositions = groundGeometry.attributes.position;
+for (let i = 0; i < groundPositions.count; i++) {
+    groundPositions.setY(i, terrainHeight(groundPositions.getX(i), groundPositions.getZ(i)));
+}
+groundGeometry.computeVertexNormals();
 scene.add(ground);
-
-const moveDist = 0.03;
 
 function createTree(x: number, z: number): void {
 
@@ -108,9 +119,12 @@ window.addEventListener('resize', () => {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+/* ===== Animation Loop ===== */
+
 renderer.setAnimationLoop(() => {
 	controls.moveRight(movementVelocity.x);
 	controls.moveForward(movementVelocity.z);
+    camera.position.y = terrainHeight(camera.position.x, camera.position.z) + cameraHeight
 	renderer.render(scene, camera);
 });
 
@@ -131,18 +145,20 @@ function takeScreenshot() {
     // link.click();
 }
 
+const moveSpeed = 0.03;
+
 function handleInput(event: KeyboardEvent) {
     if (event.key === 'w') {
-        movementVelocity.z = moveDist;
+        movementVelocity.z = moveSpeed;
     }
     if (event.key === 's') {
-        movementVelocity.z = -moveDist;
+        movementVelocity.z = -moveSpeed;
     }
     if (event.key === 'a') {
-        movementVelocity.x = -moveDist;
+        movementVelocity.x = -moveSpeed;
     }
     if (event.key === 'd') {
-        movementVelocity.x = moveDist;
+        movementVelocity.x = moveSpeed;
     }
 }
 
